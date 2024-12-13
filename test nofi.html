@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng Chấm Lịch Trình Mục Tiêu </title>
+  <style>
+  body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7fc;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 80%;
+      margin: 20px auto;
+      background-color: white;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    button {
+      padding: 5px 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button.status {
+      background-color: #ff9800;
+      color: white;
+    }
+
+    button.status.completed {
+      background-color: #4CAF50;
+    }
+
+    button.edit {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    button.delete {
+      background-color: #f44336;
+      color: white;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 10px;
+    }
+
+    .goal-row {
+      background-color: #f5f5f5;
+    }
+
+    .add-goal {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .add-goal input, .add-goal select {
+      padding: 5px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bảng Chấm Lịch Trình Mục Tiêu </h1>
+
+    <!-- Form thêm mục tiêu -->
+    <div class="add-goal">
+      <input type="text" id="goal-name" placeholder="Mục Tiêu..." required>
+      <input type="date" id="goal-date" required>
+      <select id="goal-subject">
+        <option value="toan">Toán</option>
+        <option value="ly">Lý</option>
+        <option value="hoa">Hóa</option>
+      </select>
+      <button id="add-goal-btn">Thêm Mục Tiêu</button>
+    </div>
+
+    <!-- Bảng mục tiêu -->
+    <table id="schedule">
+      <thead>
+        <tr>
+          <th>Mục Tiêu</th>
+          <th>Ngày</th>
+          <th>Trạng Thái</th>
+          <th>Chỉnh Sửa</th>
+        </tr>
+      </thead>
+      <tbody id="goal-table-body">
+        <!-- Mục tiêu sẽ được thêm động từ JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Lấy dữ liệu đã lưu trong localStorage
+    const getGoalsFromLocalStorage = () => {
+      const goals = localStorage.getItem("goals");
+      return goals ? JSON.parse(goals) : [];
+    };
+
+    // Lưu dữ liệu vào localStorage
+    const saveGoalsToLocalStorage = (goals) => {
+      localStorage.setItem("goals", JSON.stringify(goals));
+    };
+
+    // Kiểm tra nếu mục tiêu bị quá hạn
+    const checkOverdue = (goalDate) => {
+      const today = new Date();
+      const targetDate = new Date(goalDate);
+      return today > targetDate;
+    };
+
+    // Thêm mục tiêu mới vào bảng
+    const addGoalToTable = (goal) => {
+      const tableBody = document.getElementById('goal-table-body');
+      const row = document.createElement('tr');
+      row.classList.add('goal-row');
+      row.dataset.status = goal.status;
+      row.dataset.subject = goal.subject;
+
+      // Kiểm tra mục tiêu có quá hạn hay không
+      const overdueClass = checkOverdue(goal.date) && goal.status !== 'completed' ? 'overdue' : '';
+      const overdueMessage = overdueClass ? '<span class="overdue-message">Quá hạn!</span>' : '';
+
+      row.innerHTML = `
+        <td>${goal.name} ${overdueMessage}</td>
+        <td>${goal.date}</td>
+        <td>
+          <input type="checkbox" class="status-checkbox" ${goal.status === 'completed' ? 'checked' : ''}>
+          <button class="status">${goal.status === 'completed' ? 'Đã xong' : 'Chưa xong'}</button>
+        </td>
+        <td>
+          <button class="edit">Sửa</button>
+          <button class="delete">Xóa</button>
+        </td>
+      `;
+      
+      // Thêm hành động cho các nút
+      row.querySelector('.status').addEventListener('click', () => toggleStatus(goal, row));
+      row.querySelector('.edit').addEventListener('click', () => editGoal(goal, row));
+      row.querySelector('.delete').addEventListener('click', () => deleteGoal(goal, row));
+      
+      tableBody.appendChild(row);
+    };
+
+    // Cập nhật trạng thái của mục tiêu
+    const toggleStatus = (goal, row) => {
+      goal.status = goal.status === 'completed' ? 'not-completed' : 'completed';
+      saveGoalsToLocalStorage(goals);
+      row.querySelector('.status').textContent = goal.status === 'completed' ? 'Đã xong' : 'Chưa xong';
+      row.querySelector('.status').classList.toggle('completed');
+      row.querySelector('input[type="checkbox"]').checked = goal.status === 'completed';
+
+      // Cập nhật lại nhắc nhở quá hạn
+      const overdueClass = checkOverdue(goal.date) && goal.status !== 'completed' ? 'overdue' : '';
+      const overdueMessage = overdueClass ? '<span class="overdue-message">Quá hạn!</span>' : '';
+      row.querySelector('td:first-child').innerHTML = `${goal.name} ${overdueMessage}`;
+    };
+
+    // Sửa mục tiêu
+    const editGoal = (goal, row) => {
+      const newName = prompt("Nhập lại tên mục tiêu", goal.name);
+      const newDate = prompt("Nhập lại ngày", goal.date);
+      if (newName && newDate) {
+        goal.name = newName;
+        goal.date = newDate;
+        saveGoalsToLocalStorage(goals);
+        row.querySelector('td:first-child').textContent = goal.name;
+        row.querySelector('td:nth-child(2)').textContent = goal.date;
+      }
+    };
+
+    // Xóa mục tiêu
+    const deleteGoal = (goal, row) => {
+      const index = goals.indexOf(goal);
+      if (index !== -1) {
+        goals.splice(index, 1);
+        saveGoalsToLocalStorage(goals);
+        row.remove();
+      }
+    };
+
+    // Hiển thị thông báo nhắc nhở khi người dùng không ở trang web
+    const showNotification = (message) => {
+      if (Notification.permission === 'granted') {
+        new Notification(message);
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(message);
+          }
+        });
+      }
+    };
+
+    // Kiểm tra khi trang không còn hiển thị
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Kiểm tra và thông báo nếu có mục tiêu quá hạn và chưa hoàn thành
+        goals.forEach(goal => {
+          if (checkOverdue(goal.date) && goal.status !== 'completed') {
+            showNotification(`Mục tiêu "${goal.name}" đã quá hạn và chưa hoàn thành!`);
+          }
+        });
+      }
+    });
+
+    // Lấy dữ liệu đã lưu và hiển thị bảng
+    let goals = getGoalsFromLocalStorage();
+    goals.forEach(addGoalToTable);
+
+    // Thêm sự kiện cho nút thêm mục tiêu
+    document.getElementById('add-goal-btn').addEventListener('click', () => {
+      const goalName = document.getElementById('goal-name').value;
+      const goalDate = document.getElementById('goal-date').value;
+      const goalSubject = document.getElementById('goal-subject').value;
+
+      if (goalName && goalDate) {
+        const newGoal = {
+          name: goalName,
+          date: goalDate,
+          subject: goalSubject,
+          status: 'not-completed',
+        };
+        goals.push(newGoal);
+        saveGoalsToLocalStorage(goals);
+        addGoalToTable(newGoal);
+        document.getElementById('goal-name').value = '';
+        document.getElementById('goal-date').value = '';
+      } else {
+        alert("Vui lòng nhập đầy đủ tên và ngày mục tiêu.");
+      }
+    });
+  </script>
+</body>
+</html>

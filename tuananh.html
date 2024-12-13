@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Bảng Chấm Lịch Trình Mục Tiêu (3 Tháng)</title>
+  <style>
+    /* Cấu trúc CSS cho bảng */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7fc;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 80%;
+      margin: 20px auto;
+      background-color: white;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .filter {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }
+
+    .filter select {
+      padding: 5px;
+    }
+
+    .add-goal {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    button {
+      padding: 5px 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button.status {
+      background-color: #ff9800;
+      color: white;
+    }
+
+    button.status.completed {
+      background-color: #4CAF50;
+    }
+
+    button.edit {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    button.delete {
+      background-color: #f44336;
+      color: white;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 10px;
+    }
+
+    .goal-row {
+      background-color: #f5f5f5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bảng Chấm Lịch Trình Mục Tiêu (3 Tháng)</h1>
+
+    <!-- Lọc mục tiêu -->
+    <div class="filter">
+      <label for="status-filter">Lọc theo trạng thái:</label>
+      <select id="status-filter">
+        <option value="all">Tất cả</option>
+        <option value="completed">Đã xong</option>
+        <option value="not-completed">Chưa xong</option>
+      </select>
+
+      <label for="subject-filter">Lọc theo môn học:</label>
+      <select id="subject-filter">
+        <option value="all">Tất cả</option>
+        <option value="toan">Toán</option>
+        <option value="ly">Lý</option>
+        <option value="hoa">Hóa</option>
+      </select>
+    </div>
+
+    <!-- Nút thêm mục tiêu -->
+    <div class="add-goal">
+      <button id="add-goal-btn">Thêm Mục Tiêu</button>
+    </div>
+
+    <!-- Bảng mục tiêu -->
+    <table id="schedule">
+      <thead>
+        <tr>
+          <th>Mục Tiêu</th>
+          <th>Ngày</th>
+          <th>Trạng Thái</th>
+          <th>Chỉnh Sửa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Mục tiêu mẫu -->
+        <tr class="goal-row" data-status="not-completed" data-subject="toan">
+          <td>Ôn tập Toán - Bài 1: Đại số</td>
+          <td>15/12/2024</td>
+          <td>
+            <input type="checkbox" class="status-checkbox">
+            <button class="status">Chưa xong</button>
+          </td>
+          <td>
+            <button class="edit">Sửa</button>
+            <button class="delete">Xóa</button>
+          </td>
+        </tr>
+        <tr class="goal-row" data-status="not-completed" data-subject="ly">
+          <td>Ôn tập Lý - Bài 2: Dao động cơ</td>
+          <td>20/12/2024</td>
+          <td>
+            <input type="checkbox" class="status-checkbox">
+            <button class="status">Chưa xong</button>
+          </td>
+          <td>
+            <button class="edit">Sửa</button>
+            <button class="delete">Xóa</button>
+          </td>
+        </tr>
+        <tr class="goal-row" data-status="not-completed" data-subject="hoa">
+          <td>Ôn tập Hóa - Bài 3: Phản ứng oxi hóa khử</td>
+          <td>22/12/2024</td>
+          <td>
+            <input type="checkbox" class="status-checkbox">
+            <button class="status">Chưa xong</button>
+          </td>
+          <td>
+            <button class="edit">Sửa</button>
+            <button class="delete">Xóa</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // JS phần tương tác
+    document.addEventListener('DOMContentLoaded', () => {
+      const addGoalButton = document.getElementById('add-goal-btn');
+      const statusFilter = document.getElementById('status-filter');
+      const subjectFilter = document.getElementById('subject-filter');
+      const tableBody = document.querySelector('#schedule tbody');
+
+      // Thêm mục tiêu mới
+      addGoalButton.addEventListener('click', () => {
+        const goal = prompt("Nhập tên mục tiêu:");
+        const date = prompt("Nhập ngày hoàn thành:");
+        const subject = prompt("Nhập môn học (toan, ly, hoa):");
+
+        if (goal && date && subject) {
+          const newRow = document.createElement('tr');
+          newRow.classList.add('goal-row');
+          newRow.setAttribute('data-status', 'not-completed');
+          newRow.setAttribute('data-subject', subject);
+          newRow.innerHTML = `
+            <td>${goal}</td>
+            <td>${date}</td>
+            <td>
+              <input type="checkbox" class="status-checkbox">
+              <button class="status">Chưa xong</button>
+            </td>
+            <td>
+              <button class="edit">Sửa</button>
+              <button class="delete">Xóa</button>
+            </td>
+          `;
+          tableBody.appendChild(newRow);
+          setupRow(newRow);
+        }
+      });
+
+      // Xử lý các sự kiện cho dòng mục tiêu (Sửa, Xóa, checkbox)
+      function setupRow(row) {
+        const deleteButton = row.querySelector('.delete');
+        const editButton = row.querySelector('.edit');
+        const checkbox = row.querySelector('.status-checkbox');
+        const statusButton = row.querySelector('.status');
+
+        deleteButton.addEventListener('click', () => {
+          row.remove();
+        });
+
+        editButton.addEventListener('click', () => {
+          const newGoal = prompt("Chỉnh sửa mục tiêu:", row.querySelector('td:first-child').textContent);
+          const newDate = prompt("Chỉnh sửa ngày:", row.querySelector('td:nth-child(2)').textContent);
+          const newSubject = prompt("Chỉnh sửa môn học:", row.querySelector('td:first-child').textContent);
+
+          if (newGoal) row.querySelector('td:first-child').textContent = newGoal;
+          if (newDate) row.querySelector('td:nth-child(2)').textContent = newDate;
+          if (newSubject) row.setAttribute('data-subject', newSubject);
+        });
+
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) {
+            statusButton.classList.add('completed');
+            statusButton.textContent = 'Đã xong';
+            row.setAttribute('data-status', 'completed');
+          } else {
+            statusButton.classList.remove('completed');
+            statusButton.textContent = 'Chưa xong';
+           
